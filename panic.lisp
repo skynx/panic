@@ -55,7 +55,8 @@ list), and children (a list) of the JSL form FORM."
 
 (defun walk-form (form)
   "Walk the form FORM, expanding JSL forms into Parenscript function
-forms for React DOM operations, and return the resulting form."
+forms for React DOM operations, and return the resulting form.
+"
   (cond ((self-evaluating-form-p form)
          form)
         ((symbolp form)
@@ -63,14 +64,15 @@ forms for React DOM operations, and return the resulting form."
         ((jsl-form-p form)
          (multiple-value-bind (type props children)
              (destructure-jsl-form form)
-           `(ps:chain -react -d-o-m
-                      (,(alexandria:ensure-symbol type)
-                        (ps:create ,@(mapcar #'(lambda (x)
-                                                 (if (keywordp x)
-                                                     (alexandria:ensure-symbol x)
-                                                     x))
-                                             props))
-                        ,@(mapcar #'walk-form children)))))
+           `(ps:chain -react
+		      (create-element
+		       ,type
+		       (ps:create ,@(mapcar #'(lambda (x)
+						(if (keywordp x)
+						    (alexandria:ensure-symbol x)
+						    x))
+					    props))
+		       ,@(mapcar #'walk-form children)))))
         ((consp form)
          form)
         (t
@@ -86,6 +88,7 @@ constitute a possibly empty list of alternating React property names
 and values. The last element is a possibly empty list of the children
 of the React element. See the React JSX documentation."
   (walk-form form))
+
 
 (ps:defpsmacro defcomponent (name (&rest args
                                          &key (display-name (string name))
